@@ -132,6 +132,32 @@ You can also deploy your own instance of OAP, and make your own custom agents (l
 1. [Deploy Open Agent Platform](https://docs.oap.langchain.com/quickstart)
 2. [Add Deep Researcher to OAP](https://docs.oap.langchain.com/setup/agents)
 
+### 🤝 Contributing
+
+Contributions are welcome! This repository is a fork of [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research).
+
+#### Syncing with Upstream
+
+To keep your fork up-to-date with the latest changes from the upstream repository, you can:
+
+1. **Use the automated workflow**: Go to the [Actions tab](../../actions/workflows/sync-upstream.yml) and manually trigger the "Sync with Upstream" workflow, or wait for the weekly automatic sync.
+
+2. **Manual sync via command line**:
+   ```bash
+   # One-time setup: Add upstream remote
+   git remote add upstream https://github.com/langchain-ai/open_deep_research.git
+   
+   # Fetch and merge upstream changes
+   git fetch upstream
+   git checkout main
+   git merge upstream/main
+   git push origin main
+   ```
+
+3. **Use GitHub's web interface**: Click the "Sync fork" button when available on your repository page.
+
+For more detailed instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ### Legacy Implementations 🏛️
 
 The `src/legacy/` folder contains two earlier implementations that provide alternative approaches to automated research. They are less performant than the current implementation, but provide alternative ideas understanding the different approaches to deep research.
