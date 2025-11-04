@@ -79,27 +79,37 @@ jobs:
       
       - name: Create Pull Request
         if: steps.check_updates.outputs.has_updates == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.branch_name }}
-          title: "🔄 Sync with upstream repository"
-          body: |
-            ## Upstream Sync
-            
-            This PR syncs the fork with the upstream repository [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research).
-            
-            **Changes**: ${{ steps.check_updates.outputs.behind_count }} commits behind upstream
-            
-            ### Review Checklist
-            - [ ] Review the changes from upstream
-            - [ ] Resolve any merge conflicts if present
-            - [ ] Test that the application still works correctly
-            - [ ] Merge this PR to sync with upstream
-            
-            ---
-            *This PR was automatically created by the sync-upstream workflow.*
-          labels: |
-            sync
-            upstream
-          draft: ${{ env.merge_conflict == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEFAULT_BRANCH=${{ steps.check_updates.outputs.default_branch }}
+          DRAFT_FLAG=""
+          if [ "${{ env.merge_conflict }}" == "true" ]; then
+            DRAFT_FLAG="--draft"
+          fi
+          
+          # Create PR body
+          cat > /tmp/pr_body.md << 'EOF'
+          ## Upstream Sync
+          
+          This PR syncs the fork with the upstream repository [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research).
+          
+          **Changes**: ${{ steps.check_updates.outputs.behind_count }} commits behind upstream
+          
+          ### Review Checklist
+          - [ ] Review the changes from upstream
+          - [ ] Resolve any merge conflicts if present
+          - [ ] Test that the application still works correctly
+          - [ ] Merge this PR to sync with upstream
+          
+          ---
+          *This PR was automatically created by the sync-upstream workflow.*
+          EOF
+          
+          gh pr create \
+            --base $DEFAULT_BRANCH \
+            --head ${{ env.branch_name }} \
+            --title "🔄 Sync with upstream repository" \
+            --body-file /tmp/pr_body.md \
+            --label "sync,upstream" \
+            $DRAFT_FLAG
