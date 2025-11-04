@@ -156,7 +156,7 @@ To keep your fork up-to-date with the latest changes from the upstream repositor
 
 3. **Use GitHub's web interface**: Click the "Sync fork" button when available on your repository page.
 
-For more detailed instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
+For more detailed instructions, see [CONTRIBUTING.md](CONTRIBUTING.md). 中文说明请查看 [SYNC_UPSTREAM_CN.md](SYNC_UPSTREAM_CN.md).
 
 ### Legacy Implementations 🏛️
 

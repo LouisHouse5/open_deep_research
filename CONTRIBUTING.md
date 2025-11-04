@@ -4,6 +4,8 @@ Thank you for your interest in contributing to Open Deep Research!
 
 ## Syncing with Upstream Repository
 
+> **中文文档**: 查看 [SYNC_UPSTREAM_CN.md](SYNC_UPSTREAM_CN.md) 了解如何从上游仓库拉取更新。
+
 This repository is a fork of [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research). To keep your fork up-to-date with the latest changes from the upstream repository, you can use one of the following methods:
 
 ### Method 1: Automated Sync (Recommended)
