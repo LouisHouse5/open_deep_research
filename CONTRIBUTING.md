@@ -37,8 +37,8 @@ git remote -v
 
 You should see:
 ```
-origin    https://github.com/LouisHouse5/open_deep_research.git (fetch)
-origin    https://github.com/LouisHouse5/open_deep_research.git (push)
+origin    https://github.com/YOUR_USERNAME/open_deep_research.git (fetch)
+origin    https://github.com/YOUR_USERNAME/open_deep_research.git (push)
 upstream  https://github.com/langchain-ai/open_deep_research.git (fetch)
 upstream  https://github.com/langchain-ai/open_deep_research.git (push)
 ```
