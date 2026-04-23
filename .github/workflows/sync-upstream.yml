@@ -1,0 +1,116 @@
+name: Sync with Upstream
+
+on:
+  # Allow manual trigger
+  workflow_dispatch:
+  # Run weekly on Monday at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/langchain-ai/open_deep_research.git || true
+          git remote -v
+      
+      - name: Fetch upstream changes
+        run: |
+          git fetch upstream
+      
+      - name: Check for updates
+        id: check_updates
+        run: |
+          # Get the default branch name
+          DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)
+          echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
+          
+          # Check if there are any differences
+          git fetch origin $DEFAULT_BRANCH
+          BEHIND_COUNT=$(git rev-list --count HEAD..upstream/$DEFAULT_BRANCH)
+          echo "behind_count=$BEHIND_COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$BEHIND_COUNT" -gt 0 ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "Repository is $BEHIND_COUNT commits behind upstream"
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "Repository is up to date with upstream"
+          fi
+      
+      - name: Create sync branch
+        if: steps.check_updates.outputs.has_updates == 'true'
+        run: |
+          BRANCH_NAME="sync-upstream-$(date +%Y%m%d-%H%M%S)"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
+          git checkout -b $BRANCH_NAME
+      
+      - name: Merge upstream changes
+        if: steps.check_updates.outputs.has_updates == 'true'
+        run: |
+          DEFAULT_BRANCH=${{ steps.check_updates.outputs.default_branch }}
+          git merge upstream/$DEFAULT_BRANCH --no-edit || {
+            echo "Merge conflict detected. Creating PR for manual resolution."
+            echo "merge_conflict=true" >> $GITHUB_ENV
+            exit 0
+          }
+      
+      - name: Push sync branch
+        if: steps.check_updates.outputs.has_updates == 'true'
+        run: |
+          git push origin ${{ env.branch_name }}
+      
+      - name: Create Pull Request
+        if: steps.check_updates.outputs.has_updates == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEFAULT_BRANCH=${{ steps.check_updates.outputs.default_branch }}
+          BEHIND_COUNT=${{ steps.check_updates.outputs.behind_count }}
+          DRAFT_FLAG=""
+          if [ "${{ env.merge_conflict }}" == "true" ]; then
+            DRAFT_FLAG="--draft"
+          fi
+          
+          # Create PR body
+          cat > /tmp/pr_body.md << EOF
+          ## Upstream Sync
+          
+          This PR syncs the fork with the upstream repository [langchain-ai/open_deep_research](https://github.com/langchain-ai/open_deep_research).
+          
+          **Changes**: ${BEHIND_COUNT} commits behind upstream
+          
+          ### Review Checklist
+          - [ ] Review the changes from upstream
+          - [ ] Resolve any merge conflicts if present
+          - [ ] Test that the application still works correctly
+          - [ ] Merge this PR to sync with upstream
+          
+          ---
+          *This PR was automatically created by the sync-upstream workflow.*
+          EOF
+          
+          gh pr create \
+            --base $DEFAULT_BRANCH \
+            --head ${{ env.branch_name }} \
+            --title "🔄 Sync with upstream repository" \
+            --body-file /tmp/pr_body.md \
+            --label "sync,upstream" \
+            $DRAFT_FLAG
